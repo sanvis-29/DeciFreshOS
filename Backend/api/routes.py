@@ -32,18 +32,14 @@ def api_health():
 
 
 @router.post("/decision")
-def create_decision(batch: BatchCreateRequest):
+async def create_decision(batch: BatchCreateRequest):
     """
-    Run the complete DeciFresh intelligence pipeline.
+    Route the decision request into the service layer.
     """
 
     try:
         batch_data = batch.model_dump()
-
-        result = process_decision(batch_data)
-
-        return result
-
+        return process_decision(batch_data)
     except Exception as e:
         raise HTTPException(
             status_code=500,

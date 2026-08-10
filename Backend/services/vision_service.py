@@ -2,10 +2,10 @@ import os
 import json
 import base64
 
-from groq import Groq
 from dotenv import load_dotenv
+from groq import Groq
 
-load_dotenv("Backend/.env")
+load_dotenv()
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
