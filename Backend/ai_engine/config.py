@@ -1,17 +1,33 @@
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 from crewai import LLM
 
-load_dotenv("Backend/.env")
+ROOT_DIR = Path(__file__).resolve().parents[2]
+
+load_dotenv(
+    ROOT_DIR / ".env",
+    override=True,
+)
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise RuntimeError("GROQ_API_KEY not found")
 
 MODEL_NAME = os.getenv(
     "MODEL_NAME",
-    "groq/llama-3.3-70b-versatile"
+    "groq/llama-3.3-70b-versatile",
 )
 
+temperature = 0.2
+max_tokens = 2048
+
 llm = LLM(
-    model="groq/llama-3.3-70b-versatile",
-    api_key=os.getenv("GROQ_API_KEY"),
+    model=MODEL_NAME,
+    api_key=GROQ_API_KEY,
+    temperature=temperature,
 )
 
 VERBOSE = True

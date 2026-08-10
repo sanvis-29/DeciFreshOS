@@ -1588,6 +1588,146 @@ svg.orch-svg{width:100%;height:100%;display:block}
 </main>
 
   <script>
+    const DEMO_MODE = true;
+
+    let lastDecisionData = null;
+    let lastBatchPayload = null;
+
+    function buildDemoDecision(payload) {
+      return {
+        batch_id: payload.batch_id || "MX-201",
+        produce_type: payload.crop_type || "Apple",
+        quantity_kg: Number(payload.weight_kg) || 1000,
+
+        demo_mode: true,
+
+        decision_engine: {
+          score: 66.5,
+          recommendation: "Standard Retail"
+        },
+
+        counterfactual_analysis: {
+          best_action: "Standard Retail",
+          best_future_value: 68.5,
+          baseline_future_value: 48.25,
+          value_saved_vs_baseline: 20.25,
+
+          scenarios: [
+            {
+              action: "Standard Retail",
+              future_value: 68.5,
+              gain_vs_baseline: 20.25
+            },
+            {
+              action: "Cold Storage",
+              future_value: 65.4,
+              gain_vs_baseline: 17.15
+            },
+            {
+              action: "Discount Sale",
+              future_value: 62.8,
+              gain_vs_baseline: 14.55
+            },
+            {
+              action: "Food Processing",
+              future_value: 59.7,
+              gain_vs_baseline: 11.45
+            },
+            {
+              action: "Food Donation",
+              future_value: 49.1,
+              gain_vs_baseline: 0.85
+            },
+            {
+              action: "Premium Retail",
+              future_value: 44.9,
+              gain_vs_baseline: -3.35
+            },
+            {
+              action: "Animal Feed",
+              future_value: 31.5,
+              gain_vs_baseline: -16.75
+            },
+            {
+              action: "Compost",
+              future_value: 14.2,
+              gain_vs_baseline: -34.05
+            }
+          ]
+        },
+
+        historical_matches: [
+          {
+            batch_id: "H-002",
+            produce_type: "Apple",
+            similarity: 94,
+            freshness: 72,
+            decision: "Standard Retail",
+            outcome: "Successful retail sell-through",
+            waste_percent: 7
+          },
+          {
+            batch_id: "H-006",
+            produce_type: "Apple",
+            similarity: 91,
+            freshness: 68,
+            decision: "Standard Retail",
+            outcome: "Batch sold successfully",
+            waste_percent: 9
+          },
+          {
+            batch_id: "H-004",
+            produce_type: "Apple",
+            similarity: 87,
+            freshness: 79,
+            decision: "Standard Retail",
+            outcome: "High sell-through with limited waste",
+            waste_percent: 5
+          }
+        ],
+
+        ai_decision: {
+          final_recommendation: "Standard Retail",
+          confidence: 90,
+          validation_status: "APPROVED",
+          engine_agreement: "AGREE",
+
+          reasoning:
+            "Standard Retail provides the strongest balance between remaining produce quality, market demand, logistics feasibility and waste risk. Historical batches with comparable characteristics achieved successful retail outcomes, while counterfactual analysis shows a higher future value than alternative destinations."
+        },
+
+        specialist_reports: {
+          quality: {
+            status: "STANDARD QUALITY",
+            score: 68,
+            finding:
+              "Minor cosmetic imperfections are present, but the produce remains commercially suitable for standard retail."
+          },
+
+          market: {
+            status: "POSITIVE",
+            score: 74,
+            finding:
+              "Current demand supports standard retail placement without requiring aggressive discounting."
+          },
+
+          logistics: {
+            status: "VIABLE",
+            score: 76,
+            finding:
+              "Remaining shelf life provides sufficient time for local retail distribution."
+          },
+
+          sustainability: {
+            status: "LOW WASTE RISK",
+            score: 72,
+            finding:
+              "Retail routing preserves greater economic value while maintaining acceptable spoilage risk."
+          }
+        }
+      };
+    }
+
     function scrollToSection(id) {
       const element = document.getElementById(id);
 
@@ -1634,19 +1774,7 @@ svg.orch-svg{width:100%;height:100%;display:block}
       document.getElementById("decisionSummary").style.display = "none";
 
       try {
-
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/decision",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          }
-        );
-
-        const data = await response.json();
+        const data = buildDemoDecision(payload);
 
         lastBatchPayload = payload;
         lastDecisionData = data;
@@ -1859,9 +1987,6 @@ svg.orch-svg{width:100%;height:100%;display:block}
         container.appendChild(card);
       });
     }
-
-    let lastBatchPayload = null;
-    let lastDecisionData = null;
 
     function renderValidation(data) {
 

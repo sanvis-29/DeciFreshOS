@@ -1,11 +1,17 @@
 import os
 import json
 import base64
+from pathlib import Path
 
 from dotenv import load_dotenv
 from groq import Groq
 
-load_dotenv()
+ROOT_DIR = Path(__file__).resolve().parents[2]
+
+load_dotenv(
+    ROOT_DIR / ".env",
+    override=True,
+)
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")

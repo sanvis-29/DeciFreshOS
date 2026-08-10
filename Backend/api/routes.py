@@ -12,6 +12,7 @@ from Backend.api.schemas import (
 )
 
 from Backend.services.decision_service import process_decision
+from Backend.services.demo_fallback import get_standard_apple_demo
 from Backend.services.vision_service import (
     analyze_produce_image,
 )
@@ -41,6 +42,16 @@ async def create_decision(batch: BatchCreateRequest):
         batch_data = batch.model_dump()
         return process_decision(batch_data)
     except Exception as e:
+        error_text = str(e).lower()
+
+        if (
+            "ratelimit" in error_text
+            or "rate limit" in error_text
+            or "rate_limit" in error_text
+            or "429" in error_text
+        ):
+            return get_standard_apple_demo(batch.model_dump())
+
         raise HTTPException(
             status_code=500,
             detail=str(e),
