@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeciFresh — Decision Intelligence for Fresh Produce</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14261C;
+  --ink-soft:#1F3327;
+  --paper:#FFF6E3;
+  --paper-warm:#FFEFD1;
+  --card:#FFFDF7;
+  --card-dark:#18291F;
+  --mango:#FF7A1A;
+  --mango-deep:#E85D04;
+  --leaf:#2FA84F;
+  --leaf-deep:#17823D;
+  --leaf-pale:#C8F5CE;
+  --clay:#D6336C;
+  --turmeric:#FFC93C;
+  --turmeric-deep:#F2A900;
+  --line:rgba(20,38,28,.14);
+  --line-soft:rgba(20,38,28,.08);
+  --muted:rgba(20,38,28,.62);
+  --muted-inv:rgba(240,244,232,.66);
+  --shadow:0 1px 2px rgba(20,38,28,.06), 0 8px 24px -12px rgba(20,38,28,.18);
+  --shadow-pop:0 2px 4px rgba(232,93,4,.08), 0 14px 30px -14px rgba(232,93,4,.35);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(20,38,28,.18);border-radius:10px;border:2px solid var(--paper)}
+::-webkit-scrollbar-thumb:hover{background:rgba(20,38,28,.32)}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  position:relative;
+}
+/* poppy ambient blobs — fixed, low-key, behind everything */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(560px 480px at 92% -6%, rgba(255,122,26,.20), transparent 62%),
+    radial-gradient(620px 520px at -8% 18%, rgba(47,168,79,.16), transparent 60%),
+    radial-gradient(520px 460px at 104% 62%, rgba(214,51,108,.14), transparent 58%),
+    radial-gradient(480px 420px at 12% 96%, rgba(255,201,60,.20), transparent 58%);
+}
+.mono{font-family:'IBM Plex Mono',monospace}
+.display{font-family:'Space Grotesk',sans-serif}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img{max-width:100%;display:block}
+::selection{background:var(--mango);color:var(--ink)}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}
+
+/* ---------- shell ---------- */
+.shell{max-width:1240px;margin:0 auto;padding:0 32px}
+nav.topnav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(233,238,224,.86);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.topnav-inner{max-width:1240px;margin:0 auto;padding:0 32px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.wordmark{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:20px;letter-spacing:-.01em}
+.wordmark .dot{width:9px;height:9px;border-radius:50%;background:var(--mango);box-shadow:0 0 0 4px rgba(255,122,26,.25);animation:dotbreathe 2.4s ease-in-out infinite}
+@keyframes dotbreathe{0%,100%{box-shadow:0 0 0 4px rgba(255,122,26,.25)}50%{box-shadow:0 0 0 7px rgba(255,122,26,.14)}}
+.navlinks{display:flex;align-items:center;gap:4px;position:relative}
+.nav-pill{position:absolute;top:0;height:100%;background:var(--ink);border-radius:100px;transition:transform .45s var(--ease-spring), width .45s var(--ease-spring);z-index:0;pointer-events:none}
+.navlinks button{
+  padding:9px 16px;border-radius:100px;font-size:14px;font-weight:600;color:var(--muted);
+  transition:color .3s var(--ease);position:relative;z-index:1;
+}
+.navlinks button:hover{color:var(--ink)}
+.navlinks button.active{color:var(--paper-warm)}
+.navlinks button.active:hover{color:var(--paper-warm)}
+.nav-cta{padding:10px 18px;border-radius:100px;background:var(--mango);color:var(--ink);font-weight:700;font-size:14px;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.nav-cta:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.nav-cta:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+
+.page{display:none;animation:fadein .55s var(--ease)}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(14px) scale(.994)}to{opacity:1;transform:none}}
+
+/* ---------- motion utilities ---------- */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease), transform .8s var(--ease)}
+.reveal.in-view{opacity:1;transform:none}
+.reveal-stagger > *{opacity:0;transform:translateY(22px);transition:opacity .65s var(--ease), transform .65s var(--ease)}
+.reveal-stagger.in-view > *{opacity:1;transform:none}
+.reveal-stagger.in-view > *:nth-child(1){transition-delay:.02s}
+.reveal-stagger.in-view > *:nth-child(2){transition-delay:.09s}
+.reveal-stagger.in-view > *:nth-child(3){transition-delay:.16s}
+.reveal-stagger.in-view > *:nth-child(4){transition-delay:.23s}
+.reveal-stagger.in-view > *:nth-child(5){transition-delay:.30s}
+.reveal-stagger.in-view > *:nth-child(6){transition-delay:.37s}
+
+@keyframes popIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.pop-in{animation:popIn .6s var(--ease) both}
+
+.tilt{transition:transform .35s var(--ease-spring), box-shadow .35s var(--ease)}
+
+/* count-up target elements just need this class for smoother font rendering during rapid updates */
+.count{font-variant-numeric:tabular-nums}
+
+/* toast */
+#toastHost{position:fixed;bottom:26px;right:26px;z-index:999;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.toast{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper-warm);padding:14px 18px;border-radius:14px;box-shadow:0 12px 30px -8px rgba(20,38,28,.45);font-size:13.5px;font-weight:600;transform:translateY(16px) scale(.96);opacity:0;animation:toastIn .5s var(--ease-spring) forwards}
+.toast .tico{width:22px;height:22px;border-radius:50%;background:var(--leaf);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.toast.leaving{animation:toastOut .35s var(--ease) forwards}
+@keyframes toastIn{to{transform:none;opacity:1}}
+@keyframes toastOut{to{transform:translateY(10px) scale(.96);opacity:0}}
+
+/* skeleton shimmer */
+.skel{position:relative;overflow:hidden;background:var(--line-soft);border-radius:10px}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:shimmer 1.4s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+
+footer{border-top:1px solid var(--line);margin-top:120px;padding:48px 0}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.foot-note{color:var(--muted);font-size:13px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:100px;font-weight:700;font-size:15px;border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.btn-primary{background:var(--mango);color:var(--ink)}
+.btn-primary:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn-ghost{background:var(--card);border:2.5px solid var(--ink);color:var(--ink)}
+.btn-ghost:hover{background:var(--turmeric);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn-mango{background:var(--turmeric);color:var(--ink)}
+.btn-mango:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px) !important;box-shadow:1px 1px 0 var(--ink) !important;transition-duration:.08s}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important;box-shadow:4px 4px 0 var(--ink) !important}
+
+/* hero cursor glow */
+.hero{position:relative}
+.hero-glow{position:absolute;width:560px;height:560px;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(255,122,26,.22),rgba(214,51,108,.10) 45%,transparent 70%);
+  transform:translate(-50%,-50%);opacity:0;transition:opacity .5s var(--ease);left:0;top:0}
+.hero-glow.on{opacity:1}
+.hero > div, .hero > .orch-wrap{position:relative;z-index:1}
+
+/* ---------- landing hero ---------- */
+.hero{padding:88px 0 80px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--ink);background:var(--leaf-pale);border:2px solid var(--ink);padding:7px 14px;border-radius:100px;margin-bottom:24px;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--ink)}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:64px;line-height:.98;font-weight:700;letter-spacing:-.03em;margin-bottom:22px}
+.hero h1 em{font-family:'Fraunces',serif;font-style:italic;font-weight:500;color:var(--clay);position:relative}
+.hero p.lede{font-size:18px;line-height:1.6;color:var(--muted);max-width:520px;margin-bottom:32px}
+.hero-actions{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:32px;padding-top:28px;border-top:2px solid var(--line)}
+.hero-stat b{display:block;font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;background:linear-gradient(135deg,var(--mango-deep),var(--clay));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-stat span{font-size:12.5px;color:var(--muted)}
+
+.live-intel-strip{
+  margin-top:24px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:14px 18px;
+  border:2px solid var(--ink);
+  border-radius:16px;
+  background:var(--card);
+  box-shadow:4px 4px 0 var(--ink);
+}
+
+.live-intel-strip .mono{
+  font-size:11px;
+  letter-spacing:.06em;
+  font-weight:700;
+}
+
+.live-intel-strip b{
+  font-size:13.5px;
+  color:var(--ink-soft);
+}
+
+.live-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--leaf);
+  box-shadow:0 0 0 5px rgba(47,168,79,.18);
+  animation:dotbreathe 2s infinite;
+}
+
+.pricing-section{
+  position:relative;
+}
+
+.pricing-head{
+  max-width:720px;
+}
+
+.pricing-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  align-items:stretch;
+  margin-top:36px;
+}
+
+.pricing-card{
+  position:relative;
+  background:var(--card);
+  border:2.5px solid var(--ink);
+  border-radius:28px;
+  padding:30px;
+  box-shadow:6px 6px 0 var(--ink);
+  transition:
+    transform .28s var(--ease-spring),
+    box-shadow .28s var(--ease);
+  overflow:hidden;
+}
+
+.pricing-card::before{
+  content:'';
+  position:absolute;
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  top:-80px;
+  right:-70px;
+  background:rgba(255,201,60,.22);
+  pointer-events:none;
+}
+
+.pricing-card:hover{
+  transform:translateY(-7px);
+  box-shadow:9px 12px 0 var(--ink);
+}
+
+.pricing-card.featured{
+  background:linear-gradient(
+    155deg,
+    var(--ink) 0%,
+    #20362a 62%,
+    #2a1420 130%
+  );
+  color:var(--paper-warm);
+  transform:translateY(-10px);
+  box-shadow:8px 10px 0 var(--mango);
+}
+
+.pricing-card.featured:hover{
+  transform:translateY(-16px);
+  box-shadow:11px 15px 0 var(--mango);
+}
+
+.pricing-card.featured::before{
+  background:rgba(255,122,26,.18);
+}
+
+.pricing-topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.pricing-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.08em;
+}
+
+.pricing-chip{
+  font-size:10px;
+  font-weight:700;
+  padding:5px 10px;
+  border-radius:100px;
+  background:var(--leaf-pale);
+  color:var(--leaf-deep);
+  border:1.5px solid var(--ink);
+}
+
+.pricing-chip.dark{
+  background:var(--turmeric);
+  color:var(--ink);
+}
+
+.pricing-card h3{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:38px;
+  line-height:1;
+  margin-bottom:8px;
+  letter-spacing:-.03em;
+}
+
+.pricing-card h3 span{
+  font-size:16px;
+  font-weight:600;
+  opacity:.65;
+}
+
+.pricing-period{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:18px;
+}
+
+.featured .pricing-period{
+  color:var(--muted-inv);
+}
+
+.pricing-desc{
+  color:var(--muted);
+  font-size:13.5px;
+  line-height:1.6;
+  min-height:44px;
+}
+
+.featured .pricing-desc{
+  color:var(--muted-inv);
+}
+
+.pricing-divider{
+  height:1px;
+  background:var(--line);
+  margin:24px 0;
+}
+
+.featured .pricing-divider{
+  background:rgba(255,255,255,.12);
+}
+
+.pricing-card ul{
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:30px;
+}
+
+.pricing-card li{
+  font-size:13.5px;
+  padding-left:24px;
+  position:relative;
+  line-height:1.45;
+}
+
+.pricing-card li::before{
+  content:'✓';
+  position:absolute;
+  left:0;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:800;
+  background:var(--leaf-pale);
+  color:var(--leaf-deep);
+}
+
+.featured li::before{
+  background:var(--mango);
+  color:var(--ink);
+}
+
+.pricing-btn{
+  width:100%;
+  padding:13px 16px;
+  border-radius:100px;
+  font-weight:700;
+  font-size:14px;
+  border:2px solid var(--ink);
+  transition:
+    transform .18s var(--ease),
+    box-shadow .18s var(--ease);
+}
+
+.pricing-btn-primary{
+  background:var(--mango);
+  color:var(--ink);
+  box-shadow:4px 4px 0 var(--paper-warm);
+}
+
+.pricing-btn-primary:hover{
+  transform:translate(-2px,-2px);
+  box-shadow:6px 6px 0 var(--paper-warm);
+}
+
+.pricing-btn-ghost{
+  background:var(--card);
+  color:var(--ink);
+  box-shadow:4px 4px 0 var(--ink);
+}
+
+.pricing-btn-ghost:hover{
+  background:var(--turmeric);
+  transform:translate(-2px,-2px);
+  box-shadow:6px 6px 0 var(--ink);
+}
+
+.recommended-badge{
+  position:absolute;
+  top:18px;
+  right:-36px;
+  width:150px;
+  text-align:center;
+  transform:rotate(35deg);
+  background:var(--mango);
+  color:var(--ink);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.06em;
+  padding:6px 0;
+  border-top:1.5px solid var(--ink);
+  border-bottom:1.5px solid var(--ink);
+}
+
+@media(max-width:900px){
+  .pricing-grid{
+    grid-template-columns:1fr;
+  }
+
+  .pricing-card.featured{
+    transform:none;
+  }
+
+  .pricing-card.featured:hover{
+    transform:translateY(-7px);
+  }
+}
+
+/* ---------- orchestrator visual (signature element) ---------- */
+.orch-blob{position:absolute;width:120%;height:120%;top:-10%;right:-18%;border-radius:50%;background:var(--turmeric);z-index:0}
+.orch-wrap{position:relative;z-index:1;aspect-ratio:1/1;background:linear-gradient(155deg,#182F1A 0%,var(--ink) 55%,#2A1420 100%);border-radius:32px;overflow:hidden;border:2.5px solid var(--ink);box-shadow:8px 8px 0 var(--clay)}
+.orch-wrap::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(ellipse at 50% 22%, rgba(47,168,79,.4), transparent 55%),
+  radial-gradient(ellipse at 90% 90%, rgba(214,51,108,.32), transparent 55%),
+  radial-gradient(ellipse at 5% 85%, rgba(255,201,60,.22), transparent 50%);
+  pointer-events:none}
+.orch-label{position:absolute;top:20px;left:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted-inv);letter-spacing:.05em;text-transform:uppercase;z-index:3}
+.orch-label span{color:var(--turmeric)}
+svg.orch-svg{width:100%;height:100%;display:block}
+.agent-node-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:var(--muted-inv)}
+.orch-pulse{animation:orchpulse 2.6s ease-in-out infinite}
+@keyframes orchpulse{0%,100%{opacity:.35}50%{opacity:1}}
+.orch-flow{stroke-dasharray:6 10;animation:orchflow 1.6s linear infinite}
+@keyframes orchflow{to{stroke-dashoffset:-32}}
+.orch-core{animation:corepulse 2.4s ease-in-out infinite}
+@keyframes corepulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.orch-future-tag{position:absolute;bottom:18px;left:20px;right:20px;background:rgba(20,38,28,.55);border:1px solid rgba(240,244,232,.18);border-radius:12px;padding:12px 14px;backdrop-filter:blur(6px);z-index:3;min-height:78px}
+.orch-future-tag .r1{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.orch-future-tag .r1 b{color:var(--mango);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;transition:opacity .3s}
+.orch-future-tag .r1 span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted-inv)}
+.orch-future-tag p{font-size:12px;color:var(--muted-inv);line-height:1.4;transition:opacity .3s}
+.orch-future-tag.swapping b, .orch-future-tag.swapping p{opacity:0}
+.orch-dots{position:absolute;top:20px;right:20px;display:flex;gap:5px;z-index:3}
+.orch-dots span{width:5px;height:5px;border-radius:50%;background:rgba(240,244,232,.3);transition:background .3s,transform .3s}
+.orch-dots span.on{background:var(--mango);transform:scale(1.3)}
+
+/* ---------- section shared ---------- */
+.section{padding:64px 0}
+/* full-bleed poster bands — alternating colour pages, zine-style */
+.band{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw}
+.band-pink{background:#FFD9E8;border-top:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink)}
+.band-ink{background:linear-gradient(150deg,var(--ink) 0%,#1B2E1A 55%,#241428 130%);border-top:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink)}
+.band-ink .section-head h2, .band-ink .section-head p{color:var(--paper-warm)}
+.band-ink .section-head p{opacity:.75}
+.band-yellow{background:var(--turmeric);border-top:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink)}
+.band-yellow .cf-card.without{background:var(--card)}
+.section-head{max-width:640px;margin-bottom:48px}
+.section-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);background:var(--turmeric);border:2px solid var(--ink);padding:4px 11px 4px 9px;border-radius:100px;margin-bottom:16px;display:inline-block;font-weight:700;transform:rotate(-2deg)}
+.section-head h2{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;letter-spacing:-.025em;line-height:1.05;margin-bottom:14px}
+.section-head p{color:var(--muted);font-size:16px;line-height:1.6}
+
+/* reframe */
+.reframe-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:26px;overflow:hidden;border:2.5px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.reframe-col{background:var(--card);padding:36px}
+.reframe-col.old{background:var(--paper-warm)}
+.reframe-col.new{background:var(--leaf-pale);border-left:2.5px solid var(--ink)}
+.reframe-col h3{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.reframe-col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+.reframe-col.old li{color:var(--muted);font-size:15px;padding-left:20px;position:relative}
+.reframe-col.old li::before{content:'—';position:absolute;left:0;color:var(--muted)}
+.reframe-col.new li{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:500;padding-left:24px;position:relative}
+.reframe-col.new li::before{content:'→';position:absolute;left:0;color:var(--leaf)}
+
+/* agents */
+.agent-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.agent-card{border:2.5px solid var(--ink);border-radius:24px;padding:26px 22px;box-shadow:5px 5px 0 var(--ink);transition:transform .25s var(--ease-spring),box-shadow .25s var(--ease);will-change:transform}
+.agent-card:nth-child(odd){transform:rotate(-1.2deg)}
+.agent-card:nth-child(even){transform:rotate(1.2deg)}
+.agent-card:hover{transform:translate(-3px,-3px) rotate(0deg);box-shadow:8px 8px 0 var(--ink)}
+.agent-icon{width:46px;height:46px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:21px}
+.agent-card h4{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px;letter-spacing:-.01em}
+.agent-card .q{color:var(--ink-soft);opacity:.75;font-size:13.5px;font-style:italic;margin-bottom:14px;line-height:1.5}
+.agent-card ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.agent-card li{font-size:12.5px;color:var(--ink-soft);opacity:.8;padding-left:14px;position:relative}
+.agent-card li::before{content:'';position:absolute;left:0;top:6px;width:5px;height:5px;border-radius:50%;background:var(--ink)}
+
+/* futures strip */
+.futures-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.future-card{border-radius:22px;padding:22px;border:2.5px solid var(--ink);background:var(--card);position:relative;box-shadow:5px 5px 0 var(--ink);transition:transform .2s var(--ease-spring),box-shadow .2s var(--ease);will-change:transform}
+.future-card:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.future-card.winner{background:linear-gradient(160deg,var(--ink) 0%,#2A1420 130%);color:var(--paper-warm);border-color:var(--ink);box-shadow:5px 5px 0 var(--clay)}
+.future-card.winner:hover{box-shadow:8px 8px 0 var(--clay)}
+.future-card.winner .fc-badge{display:inline-block}
+.fc-badge{display:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:var(--turmeric);color:var(--ink);border:1.5px solid var(--ink);padding:3px 9px;border-radius:100px;margin-bottom:12px;font-weight:700;transform:rotate(-2deg)}
+.future-card h5{font-family:'Space Grotesk',sans-serif;font-size:16.5px;font-weight:600;margin-bottom:14px;line-height:1.3}
+.fc-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:1px solid rgba(20,38,28,.1)}
+.future-card.winner .fc-row{border-top:1px solid rgba(240,244,232,.14)}
+.fc-row span:first-child{color:var(--muted)}
+.future-card.winner .fc-row span:first-child{color:var(--muted-inv)}
+.fc-row b{font-family:'IBM Plex Mono',monospace;font-weight:600}
+
+/* VPS gauge section */
+.vps-section{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;align-items:center;background:linear-gradient(150deg,var(--ink) 0%,#1B2E1A 60%,#2A1420 130%);border-radius:32px;padding:56px;color:var(--paper-warm);position:relative;overflow:hidden;box-shadow:0 26px 56px -22px rgba(23,130,61,.35)}
+.vps-section::before{content:'';position:absolute;inset:0;background:radial-gradient(420px 380px at 100% 0%,rgba(255,201,60,.14),transparent 60%);pointer-events:none}
+.vps-section .section-tag{transform:rotate(2deg)}
+.vps-section h2{color:var(--paper-warm)}
+.vps-section p{color:var(--muted-inv)}
+.vps-factors{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px}
+.vps-factor{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted-inv)}
+.vps-factor .b{width:6px;height:6px;border-radius:50%;background:var(--mango)}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge-num{font-family:'Space Grotesk',sans-serif;font-size:56px;font-weight:600;margin-top:-118px}
+.gauge-lbl{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted-inv);letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
+.ring-fill{transition:stroke-dashoffset 1.4s var(--ease)}
+
+/* counterfactual */
+.cf-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cf-card{border-radius:24px;padding:28px;border:2.5px solid var(--ink);transition:transform .2s var(--ease-spring),box-shadow .2s var(--ease);box-shadow:5px 5px 0 var(--ink)}
+.cf-card:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.cf-card.without{background:var(--paper-warm)}
+.cf-card.with{background:var(--leaf-pale);box-shadow:5px 5px 0 var(--leaf-deep)}
+.cf-card.with:hover{box-shadow:8px 8px 0 var(--leaf-deep)}
+.cf-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:16px;display:block}
+.cf-card.with .cf-tag{color:var(--leaf-deep)}
+.cf-big{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:600;margin-bottom:4px}
+.cf-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.cf-metric{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid rgba(20,38,28,.1)}
+.cf-metric b{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- generic page header ---------- */
+.pagehead{padding:56px 0 36px;border-bottom:1px solid var(--line)}
+.pagehead .section-tag{margin-bottom:12px}
+.pagehead h1{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:600;letter-spacing:-.01em}
+.pagehead p{color:var(--muted);margin-top:10px;max-width:560px;font-size:15.5px;line-height:1.6}
+
+/* ---------- upload page ---------- */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:48px 0}
+.dropzone{border:3px dashed var(--ink);border-radius:26px;background:var(--card);padding:40px;text-align:center;transition:border-color .2s, background .2s, transform .2s;cursor:pointer}
+.dropzone:hover{border-color:var(--leaf);background:var(--leaf-pale);transform:translate(-2px,-2px)}
+.dropzone .dz-icon{width:56px;height:56px;border-radius:16px;background:var(--leaf-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:26px}
+.dropzone h4{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:18px;margin-bottom:6px}
+.dropzone p{color:var(--muted);font-size:13.5px}
+.dropzone.has-image{padding:0;border-style:solid;overflow:hidden}
+.dropzone.has-image img{width:100%;height:260px;object-fit:cover}
+.vision-result-layout{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:28px;
+  align-items:start;
+  margin-bottom:22px;
+}
+
+.vision-result-image{
+  position:relative;
+}
+
+.vision-result-image img{
+  width:100%;
+  height:210px;
+  object-fit:cover;
+  border:2.5px solid var(--ink);
+  border-radius:18px;
+  box-shadow:4px 4px 0 var(--ink);
+}
+
+.vision-result-image span{
+  display:inline-block;
+  margin-top:10px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.05em;
+  color:var(--muted);
+}
+
+@media(max-width:700px){
+  .vision-result-layout{
+    grid-template-columns:1fr;
+  }
+
+  .vision-result-image img{
+    height:240px;
+  }
+}
+
+.field-group{display:flex;flex-direction:column;gap:18px;margin-top:24px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.field select,.field input{padding:13px 15px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink)}
+.field select:focus,.field input:focus{outline:none;border-color:var(--leaf)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.review-card{background:var(--card);border:2.5px solid var(--ink);border-radius:24px;padding:30px;box-shadow:5px 5px 0 var(--ink)}
+.review-card h4{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin-bottom:18px}
+.review-row{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--line-soft);font-size:14px}
+.review-row:first-of-type{border-top:none}
+.review-row span:first-child{color:var(--muted)}
+.review-row b{font-family:'IBM Plex Mono',monospace}
+
+.thinking-panel{background:linear-gradient(155deg,var(--ink),#241428 140%);border-radius:24px;padding:34px;color:var(--paper-warm);border:2.5px solid var(--ink);box-shadow:6px 6px 0 var(--clay)}
+.thinking-panel h4{font-family:'Space Grotesk',sans-serif;font-size:19px;margin-bottom:22px}
+.think-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid rgba(240,244,232,.1)}
+.think-row:first-child{border-top:none}
+.think-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(240,244,232,.3);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .3s}
+.think-dot.done{background:var(--leaf);border-color:var(--leaf)}
+.think-dot.active{border-color:var(--mango);box-shadow:0 0 0 4px rgba(255,122,26,.2)}
+.think-row .tt{flex:1}
+.think-row .tt b{display:block;font-size:14px;font-weight:600}
+.think-row .tt span{font-size:12px;color:var(--muted-inv)}
+.think-row .status{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted-inv)}
+
+/* ---------- dashboard ---------- */
+.dash-toolbar{display:flex;justify-content:space-between;align-items:center;margin:32px 0 24px;flex-wrap:wrap;gap:14px}
+.dash-stats{display:flex;gap:14px}
+.dstat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 20px;min-width:130px}
+.dstat b{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600}
+.dstat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.filter-chips{display:flex;gap:8px;position:relative}
+.chip{padding:8px 15px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);transition:color .3s var(--ease),border-color .3s var(--ease);position:relative}
+.chip.active{color:var(--paper-warm);border-color:transparent}
+.chip-pill{position:absolute;top:0;height:100%;background:var(--ink);border-radius:100px;z-index:-1;transition:transform .4s var(--ease-spring),width .4s var(--ease-spring)}
+.chip{z-index:1;transition:color .3s var(--ease),transform .15s var(--ease)}
+.chip:active{transform:scale(.94)}
+
+.batch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:64px}
+.batch-card{background:var(--card);border:2.5px solid var(--ink);border-radius:22px;padding:22px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .2s var(--ease-spring),box-shadow .2s var(--ease);will-change:transform}
+.batch-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--ink)}
+.batch-card:active{transform:scale(.98) !important}
+.bc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.bc-crop{display:flex;align-items:center;gap:10px}
+.bc-emoji{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px}
+.bc-crop b{font-family:'Space Grotesk',sans-serif;font-size:16.5px;display:block}
+.bc-crop span{font-size:12px;color:var(--muted)}
+.bc-status{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:4px 9px;border-radius:100px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.bc-status.decided{background:var(--leaf-pale);color:var(--leaf-deep)}
+.bc-status.pending{background:#FFE29A;color:var(--mango-deep)}
+.bc-status.risk{background:#FFD2BE;color:var(--clay)}
+.bc-vps{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.bc-ring{position:relative;width:52px;height:52px;flex-shrink:0}
+.bc-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.bc-ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600}
+.bc-vps-lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.bc-vps-lbl b{display:block;font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--ink);text-transform:none;letter-spacing:0}
+.bc-decision{font-size:13.5px;line-height:1.5;padding-top:14px;border-top:1px solid var(--line-soft)}
+.bc-decision b{color:var(--leaf-deep)}
+
+/* ---------- decision page ---------- */
+.decision-hero{background:linear-gradient(150deg,var(--ink),#241428 140%);color:var(--paper-warm);border-radius:28px;padding:40px;margin:32px 0;display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center;border:2.5px solid var(--ink);box-shadow:6px 6px 0 var(--mango)}
+.decision-hero .dh-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mango);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+.decision-hero h2{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:600;line-height:1.2;max-width:560px}
+.decision-hero .conf{text-align:center;background:rgba(240,244,232,.06);border:1px solid rgba(240,244,232,.16);border-radius:16px;padding:20px 28px}
+.decision-hero .conf b{font-family:'Space Grotesk',sans-serif;font-size:32px;display:block}
+.decision-hero .conf span{font-size:11px;color:var(--muted-inv);text-transform:uppercase;letter-spacing:.04em}
+
+.dtabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:32px;position:relative}
+.dtab{padding:12px 4px;margin-right:26px;font-size:14.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;position:relative;top:1px;transition:color .3s var(--ease)}
+.dtab.active{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+
+    <div class="wordmark">
+      <span class="dot"></span>
+      DeciFresh
+    </div>
+
+    <div class="navlinks">
+      <button onclick="scrollToSection('home')">Home</button>
+      <button onclick="scrollToSection('howItWorks')">How It Works</button>
+      <button onclick="scrollToSection('pricing')">Pricing</button>
+      <button onclick="scrollToSection('batchIntake')">Analyze</button>
+    </div>
+
+    <button
+      class="nav-cta"
+      onclick="scrollToSection('batchIntake')"
+    >
+      Analyze Batch →
+    </button>
+
+  </div>
+</nav>
+
+<main>
+
+<section id="home" class="shell">
+
+  <div class="hero">
+
+    <div>
+
+      <span class="eyebrow">
+        AI Decision Intelligence for Fresh Produce
+      </span>
+
+      <h1>
+        Don't predict spoilage.
+        Decide what happens
+        <em>next.</em>
+      </h1>
+
+      <p class="lede">
+        DeciFresh evaluates multiple possible futures for every produce
+        batch and recommends the highest-value viable action before
+        freshness, revenue or food is lost.
+      </p>
+
+      <div class="hero-actions">
+
+        <button
+          class="btn btn-primary"
+          onclick="scrollToSection('batchIntake')"
+        >
+          Analyze a Batch →
+        </button>
+
+        <button
+          class="btn btn-ghost"
+          onclick="scrollToSection('howItWorks')"
+        >
+          See How It Works
+        </button>
+
+      </div>
+
+      <div class="hero-stats">
+
+        <div class="hero-stat">
+          <b>8</b>
+          <span>Possible Futures</span>
+        </div>
+
+        <div class="hero-stat">
+          <b>6</b>
+          <span>AI Decision Roles</span>
+        </div>
+
+        <div class="hero-stat">
+          <b>1</b>
+          <span>Validated Action</span>
+        </div>
+
+      </div>
+
+      <div class="live-intel-strip">
+        <span class="live-dot"></span>
+        <span class="mono">LIVE INTELLIGENCE</span>
+        <b id="liveIntelMessage">
+          Simulating possible futures...
+        </b>
+      </div>
+
+    </div>
+
+    <div class="orch-wrap">
+
+      <div class="orch-label">
+        DECIFRESH <span>LIVE INTELLIGENCE</span>
+      </div>
+
+      <svg
+        class="orch-svg"
+        viewBox="0 0 500 500"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+
+        <!-- connections -->
+        <g
+          fill="none"
+          stroke="rgba(255,255,255,.24)"
+          stroke-width="2"
+          class="orch-flow"
+        >
+          <path d="M250 250 L120 130"/>
+          <path d="M250 250 L380 130"/>
+          <path d="M250 250 L120 365"/>
+          <path d="M250 250 L380 365"/>
+        </g>
+
+        <!-- centre -->
+        <circle
+          cx="250"
+          cy="250"
+          r="60"
+          fill="#FF7A1A"
+          class="orch-core"
+        />
+
+        <text
+          x="250"
+          y="245"
+          text-anchor="middle"
+          fill="#14261C"
+          font-size="16"
+          font-weight="700"
+        >
+          DECIFRESH
+        </text>
+
+        <text
+          x="250"
+          y="267"
+          text-anchor="middle"
+          fill="#14261C"
+          font-size="10"
+        >
+          DECISION CORE
+        </text>
+
+        <!-- specialist nodes -->
+        <circle cx="120" cy="130" r="40" fill="#C8F5CE"/>
+        <circle cx="380" cy="130" r="40" fill="#FFC93C"/>
+        <circle cx="120" cy="365" r="40" fill="#FFD9E8"/>
+        <circle cx="380" cy="365" r="40" fill="#FFF6E3"/>
+
+        <text x="120" y="134" text-anchor="middle" font-size="11">
+          QUALITY
+        </text>
+
+        <text x="380" y="134" text-anchor="middle" font-size="11">
+          MARKET
+        </text>
+
+        <text x="120" y="369" text-anchor="middle" font-size="11">
+          LOGISTICS
+        </text>
+
+        <text x="380" y="369" text-anchor="middle" font-size="10">
+          WASTE
+        </text>
+
+      </svg>
+
+      <div class="orch-future-tag">
+
+        <div class="r1">
+          <b>Standard Retail</b>
+          <span>BEST FUTURE</span>
+        </div>
+
+        <p>
+          Future Value 71.7 · +21.45 vs baseline
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section id="howItWorks" class="band band-pink">
+
+  <div class="shell section">
+
+    <div class="section-head">
+      <span class="section-tag">How It Works</span>
+
+      <h2>
+        One batch. Eight futures.
+        One validated decision.
+      </h2>
+
+      <p>
+        DeciFresh combines deterministic scoring,
+        specialist AI, historical memory and
+        counterfactual simulation.
+      </p>
+    </div>
+
+    <div class="agent-grid">
+
+      <div class="agent-card" style="background:#C8F5CE;">
+        <div class="agent-icon">🥭</div>
+        <h4>Quality</h4>
+        <p class="q">“Is this produce commercially viable?”</p>
+      </div>
+
+      <div class="agent-card" style="background:#FFC93C;">
+        <div class="agent-icon">📈</div>
+        <h4>Market</h4>
+        <p class="q">“Is now the right time to sell?”</p>
+      </div>
+
+      <div class="agent-card" style="background:#FFD9E8;">
+        <div class="agent-icon">🚚</div>
+        <h4>Logistics</h4>
+        <p class="q">“Can this path be executed efficiently?”</p>
+      </div>
+
+      <div class="agent-card" style="background:#FFFDF7;">
+        <div class="agent-icon">♻️</div>
+        <h4>Sustainability</h4>
+        <p class="q">“How urgently must we prevent waste?”</p>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section id="batchIntake" class="shell section">
+
+  <div class="section-head">
+
+    <span class="section-tag">
+      Decision Workspace
+    </span>
+
+    <h2>
+      Add a produce batch.
+    </h2>
+
+    <p>
+      Enter batch information manually or use
+      computer vision to analyze a produce image.
+    </p>
+
+  </div>
+
+  <div class="pagehead">
+    <span class="section-tag">DeciFresh Test</span>
+    <h1>Analyze Produce Batch</h1>
+    <p>Enter batch details and run the DeciFresh decision engine.</p>
+  </div>
+
+  <div class="upload-grid">
+
+      <div class="review-card" id="manualMode" style="margin-bottom:30px;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
+          <div>
+            <span class="section-tag">AI Vision</span>
+            <h4 style="font-size:22px; margin-top:8px;">
+              Scan Produce Sample
+            </h4>
+            <p style="color:var(--muted); margin-top:6px; line-height:1.6;">
+              Upload a sample image from the batch. DeciFresh estimates visible
+              freshness, quality grade and surface issues from the image.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="dropzone"
+          id="visionDropzone"
+          style="margin-top:22px;"
+          onclick="document.getElementById('visionImage').click()"
+        >
+
+          <input
+            id="visionImage"
+            type="file"
+            accept="image/*"
+            style="display:none"
+            onchange="scanProduce(event)"
+          >
+
+          <div id="visionUploadContent">
+            <div class="dz-icon">📷</div>
+            <h4>Upload Sample Image</h4>
+            <p>
+              Choose a produce image or take a photo on your phone.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Loading -->
+        <div id="visionLoading" style="display:none; margin-top:20px;">
+          <div class="thinking-panel">
+            <h4>DeciFresh Vision is inspecting the sample...</h4>
+            <p style="color:var(--muted-inv);">
+              Detecting produce type, visible freshness and quality signals.
+            </p>
+          </div>
+        </div>
+
+        <!-- Vision result -->
+        <div id="visionResult" style="display:none; margin-top:22px;">
+
+          <div style="
+            font-family:'IBM Plex Mono',monospace;
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.05em;
+            margin-bottom:12px;
+          ">
+            Sample Analysis
+          </div>
+
+          <div class="vision-result-layout">
+
+            <div class="vision-result-image">
+
+              <img
+                id="visionResultImage"
+                alt="Analyzed produce sample"
+              >
+
+              <span>ANALYZED SAMPLE</span>
+
+            </div>
+
+            <div class="vision-result-data">
+
+              <div class="review-row">
+                <span>Detected Produce</span>
+                <b id="visionProduce">—</b>
+              </div>
+
+              <div class="review-row">
+                <span>Visual Freshness</span>
+                <b id="visionFreshness">—</b>
+              </div>
+
+              <div class="review-row">
+                <span>Quality Grade</span>
+                <b id="visionGrade">—</b>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div style="margin-top:18px;">
+            <span style="font-size:12px; color:var(--muted);">
+              VISIBLE QUALITY SIGNALS
+            </span>
+
+            <div
+              id="visionIssues"
+              style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"
+            ></div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <span style="
+              font-size:12px;
+              color:var(--muted);
+            ">
+              AI VISUAL ASSESSMENT
+            </span>
+
+            <p
+              id="visionSummary"
+              style="
+                margin-top:8px;
+                line-height:1.6;
+                color:var(--muted);
+              "
+            ></p>
+          </div>
+
+          <div style="margin-top:22px;">
+            <button class="btn btn-primary" onclick="scrollToDecisionForm()">
+              Continue to Decision →
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="review-card">
+
+        <h4>Batch Details</h4>
+
+        <div class="field-group">
+
+          <div class="field">
+            <label>Batch ID</label>
+            <input id="batch_id" value="MX-201">
+          </div>
+
+          <div class="field">
+            <label>Crop Type</label>
+            <input id="crop_type" value="Mangoes">
+          </div>
+
+          <div class="field">
+            <label>Weight (kg)</label>
+            <input id="weight_kg" type="number" value="1000">
+          </div>
+
+          <div class="field">
+            <label>Origin</label>
+            <input id="origin" value="Farm A, Azadpur">
+          </div>
+
+          <div class="field">
+            <label>Harvest Date</label>
+            <input id="harvest_date" type="date" value="2026-08-05">
+          </div>
+
+          <div class="field">
+            <label>Current Location</label>
+            <input id="current_location" value="Delhi Warehouse">
+          </div>
+
+          <button
+            id="analyzeBtn"
+            class="btn btn-primary"
+            onclick="runDecision()"
+          >
+            Analyze Batch
+          </button>
+
+          <button class="btn btn-ghost" onclick="resetDecision()">
+            Analyze New Batch
+          </button>
+
+        </div>
+      </div>
+
+      <div class="review-card" id="decisionResultCard">
+        <h4>Decision Result</h4>
+
+        <div id="thinkingState" style="display:none; margin-top:24px;">
+          <div class="thinking-panel">
+            <h4>DeciFresh is evaluating the batch...</h4>
+
+            <div class="think-row">
+              <div class="think-dot active">1</div>
+              <div class="tt">
+                <b>Scoring batch</b>
+                <span>Running deterministic baseline</span>
+              </div>
+            </div>
+
+            <div class="think-row">
+              <div class="think-dot">2</div>
+              <div class="tt">
+                <b>Specialist analysis</b>
+                <span>Quality, market, logistics and sustainability</span>
+              </div>
+            </div>
+
+            <div class="think-row">
+              <div class="think-dot">3</div>
+              <div class="tt">
+                <b>Retrieving historical evidence</b>
+                <span>Searching similar past batches</span>
+              </div>
+            </div>
+
+            <div class="think-row">
+              <div class="think-dot">4</div>
+              <div class="tt">
+                <b>Simulating futures</b>
+                <span>Comparing counterfactual outcomes</span>
+              </div>
+            </div>
+
+            <div class="think-row">
+              <div class="think-dot">5</div>
+              <div class="tt">
+                <b>Validating recommendation</b>
+                <span>Auditing the final decision</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="emptyDecision">
+          <span class="section-tag">Decision Pending</span>
+
+          <h4 style="margin-top:12px;">
+            Ready for full intelligence analysis.
+          </h4>
+
+          <p style="color:var(--muted); margin-top:8px; line-height:1.6;">
+            Confirm the remaining batch details and run DeciFresh to generate
+            the optimal action, future-value comparison and validated recommendation.
+          </p>
+        </div>
+
+        <div id="decisionSummary" style="display:none;">
+
+          <div class="decision-hero" style="margin: 0 0 22px;">
+            <div>
+              <div class="dh-tag">Validated Recommendation</div>
+
+              <h2 id="finalRecommendation">
+                Standard Retail
+              </h2>
+            </div>
+
+            <div class="conf">
+              <b id="aiConfidence">0%</b>
+              <span>AI Confidence</span>
+            </div>
+          </div>
+
+          <div class="review-row">
+            <span>Decision Score</span>
+            <b id="decisionScore">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Validation Status</span>
+            <b id="validationStatus">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Engine Agreement</span>
+            <b id="engineAgreement">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Best Future Value</span>
+            <b id="bestFutureValue">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Baseline Value</span>
+            <b id="baselineValue">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Value Preserved</span>
+            <b id="valueSaved">—</b>
+          </div>
+
+        </div>
+
+        <div id="futuresSection" style="display:none; margin-top: 22px;">
+          <h4>Future Value Plan</h4>
+
+          <div class="review-row">
+            <span>Best Recommended Action</span>
+            <b id="bestAction">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Forecasted Future Value</span>
+            <b id="forecastValue">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Baseline Future Value</span>
+            <b id="baselineFutureValue">—</b>
+          </div>
+
+          <div class="review-row">
+            <span>Value Saved vs Baseline</span>
+            <b id="valueSavedVsBaseline">—</b>
+          </div>
+        </div>
+
+        <div id="allFuturesSection" style="display:none; margin-top:32px;">
+
+          <div class="section-head">
+            <span class="section-tag">Counterfactual Simulation</span>
+            <h2>Every possible future.</h2>
+            <p>
+              DeciFresh compares alternative actions before committing to one.
+            </p>
+          </div>
+
+          <div class="futures-strip" id="allFuturesContainer"></div>
+
+        </div>
+
+        <div id="historySection" style="display:none; margin-top:40px;">
+
+          <div class="section-head">
+            <span class="section-tag">Historical RAG</span>
+            <h2>Similar batches. Real outcomes.</h2>
+            <p>
+              DeciFresh retrieves comparable historical cases and uses their outcomes
+              as supporting evidence for the current decision.
+            </p>
+          </div>
+
+          <div class="batch-grid" id="historyContainer"></div>
+
+        </div>
+
+        <div id="validationSection" style="display:none; margin-top:40px;">
+
+          <div class="section-head">
+            <span class="section-tag">Validation Layer</span>
+            <h2>Every decision is audited.</h2>
+            <p>
+              The Validator independently checks whether the AI recommendation is
+              supported by the deterministic engine, specialist reports, historical
+              evidence and counterfactual analysis.
+            </p>
+          </div>
+
+          <div class="decision-hero">
+
+            <div>
+              <div class="dh-tag">Validation Status</div>
+
+              <h2 id="validationDecision">
+                APPROVED
+              </h2>
+
+              <p id="validationReasoning"
+                 style="margin-top:16px; color:var(--muted-inv); line-height:1.6;">
+              </p>
+            </div>
+
+            <div class="conf">
+              <b id="validationConfidence">0%</b>
+              <span>Validation Confidence</span>
+            </div>
+
+          </div>
+
+          <div class="review-card">
+
+            <div class="review-row">
+              <span>Final Recommendation</span>
+              <b id="validatedRecommendation">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Engine Agreement</span>
+              <b id="validatedAgreement">—</b>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div id="passportSection" style="display:none; margin-top:40px;">
+
+          <div class="section-head">
+            <span class="section-tag">Digital Produce Passport</span>
+            <h2>One batch. One decision identity.</h2>
+            <p>
+              DeciFresh packages traceability, decision intelligence,
+              future-value analysis and validation into a single batch record.
+            </p>
+          </div>
+
+          <div class="review-card">
+
+            <div class="review-row">
+              <span>Batch ID</span>
+              <b id="passportBatchId">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Produce</span>
+              <b id="passportProduce">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Quantity</span>
+              <b id="passportQuantity">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Decision Score</span>
+              <b id="passportScore">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Final Recommendation</span>
+              <b id="passportDecision">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>AI Confidence</span>
+              <b id="passportConfidence">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Validation</span>
+              <b id="passportValidation">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Best Future Value</span>
+              <b id="passportFutureValue">—</b>
+            </div>
+
+            <div class="review-row">
+              <span>Value Saved vs Baseline</span>
+              <b id="passportValueSaved">—</b>
+            </div>
+
+            <div style="margin-top:24px;">
+              <button class="btn btn-primary" onclick="generatePassport()">
+                Generate / Refresh Passport
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="pricing" class="shell section pricing-section">
+
+    <div class="section-head pricing-head">
+      <span class="section-tag">Pricing</span>
+
+      <h2>
+        Start small. Scale with every decision.
+      </h2>
+
+      <p>
+        Choose a plan based on operational scale — from pilot testing
+        to multi-location enterprise deployment.
+      </p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <!-- PILOT -->
+      <div class="pricing-card">
+
+        <div class="pricing-topline">
+          <span class="pricing-label">PILOT</span>
+          <span class="pricing-chip">For testing</span>
+        </div>
+
+        <h3>₹10K–₹25K</h3>
+        <span class="pricing-period">for 1–2 months</span>
+
+        <p class="pricing-desc">
+          Validate DeciFresh on a real workflow before scaling.
+        </p>
+
+        <div class="pricing-divider"></div>
+
+        <ul>
+          <li>Single-location deployment</li>
+          <li>Decision dashboard</li>
+          <li>Counterfactual analysis</li>
+          <li>Historical intelligence</li>
+          <li>Digital produce passport</li>
+        </ul>
+
+        <button class="pricing-btn pricing-btn-ghost">
+          Start Pilot →
+        </button>
+
+      </div>
+
+      <!-- BUSINESS -->
+      <div class="pricing-card featured">
+
+        <div class="recommended-badge">
+          MOST POPULAR
+        </div>
+
+        <div class="pricing-topline">
+          <span class="pricing-label">BUSINESS</span>
+          <span class="pricing-chip dark">Best value</span>
+        </div>
+
+        <h3>₹9,999<span>/mo</span></h3>
+
+        <p class="pricing-desc">
+          Built for warehouses, distributors and produce processors.
+        </p>
+
+        <div class="pricing-divider"></div>
+
+        <ul>
+          <li>Recurring batch intelligence</li>
+          <li>AI Vision analysis</li>
+          <li>Historical RAG</li>
+          <li>Decision validation</li>
+          <li>Digital Produce Passports</li>
+          <li>Priority support</li>
+        </ul>
+
+        <button class="pricing-btn pricing-btn-primary">
+          Choose Business →
+        </button>
+
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="pricing-card">
+
+        <div class="pricing-topline">
+          <span class="pricing-label">ENTERPRISE</span>
+          <span class="pricing-chip">At scale</span>
+        </div>
+
+        <h3>₹25K+<span>/mo</span></h3>
+
+        <p class="pricing-desc">
+          For large produce networks and multi-location supply chains.
+        </p>
+
+        <div class="pricing-divider"></div>
+
+        <ul>
+          <li>Multi-location operations</li>
+          <li>ERP / WMS integration</li>
+          <li>Volume-based API access</li>
+          <li>Custom decision policies</li>
+          <li>Advanced analytics</li>
+          <li>Enterprise onboarding</li>
+        </ul>
+
+        <button class="pricing-btn pricing-btn-ghost">
+          Contact Sales →
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="band band-ink">
+    <div class="shell section" style="text-align:center;">
+
+      <span class="section-tag">
+        Ready to Decide?
+      </span>
+
+      <h2 style="
+        color:var(--paper-warm);
+        font-family:'Space Grotesk',sans-serif;
+        font-size:42px;
+        margin:14px auto;
+        max-width:760px;
+      ">
+        Every batch has multiple futures.
+        DeciFresh helps choose the right one.
+      </h2>
+
+      <p style="
+        color:var(--muted-inv);
+        max-width:620px;
+        margin:0 auto 26px;
+        line-height:1.6;
+      ">
+        Scan a produce sample, add batch context,
+        simulate possible futures and generate a validated decision.
+      </p>
+
+      <button
+        class="btn btn-primary"
+        onclick="scrollToSection('batchIntake')"
+      >
+        Analyze a Batch →
+      </button>
+
+    </div>
+  </section>
+
+</main>
+
+  <script>
+    function scrollToSection(id) {
+      const element = document.getElementById(id);
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    }
+
+    function scrollToDecisionForm() {
+      const element = document.getElementById("manualMode");
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    }
+
+    async function runDecision() {
+
+      const analyzeBtn = document.getElementById("analyzeBtn");
+
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = "Analyzing...";
+
+      const payload = {
+        batch_id: document.getElementById("batch_id").value,
+        crop_type: document.getElementById("crop_type").value,
+        weight_kg: Number(document.getElementById("weight_kg").value),
+        origin: document.getElementById("origin").value,
+        harvest_date: document.getElementById("harvest_date").value,
+        current_location: document.getElementById("current_location").value
+      };
+
+      document.getElementById("thinkingState").style.display = "block";
+      document.getElementById("emptyDecision").innerHTML =
+        "<p style='color:var(--muted);font-size:14px;'>DeciFresh is analyzing the batch...</p>";
+
+      document.getElementById("emptyDecision").style.display = "block";
+      document.getElementById("decisionSummary").style.display = "none";
+
+      try {
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/decision",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        const data = await response.json();
+
+        lastBatchPayload = payload;
+        lastDecisionData = data;
+
+        renderDecision(data);
+        renderFutures(data);
+        renderAllFutures(data);
+        renderHistory(data);
+        renderValidation(data);
+        renderPassportPreview(data, payload);
+
+        document.getElementById("thinkingState").style.display = "none";
+        document.getElementById("decisionResultCard").scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+      } catch (error) {
+
+        document.getElementById("thinkingState").style.display = "none";
+      document.getElementById("emptyDecision").innerHTML =
+          "<p style='color:var(--clay);font-size:14px;'>Error: " +
+          error.message +
+          "</p>";
+      } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = "Analyze Batch";
+      }
+    }
+
+    function resetDecision() {
+      document.getElementById("decisionSummary").style.display = "none";
+      document.getElementById("futuresSection").style.display = "none";
+      document.getElementById("allFuturesSection").style.display = "none";
+      document.getElementById("historySection").style.display = "none";
+      document.getElementById("validationSection").style.display = "none";
+      document.getElementById("passportSection").style.display = "none";
+      document.getElementById("thinkingState").style.display = "none";
+
+      document.getElementById("emptyDecision").style.display = "block";
+      document.getElementById("emptyDecision").innerHTML =
+        "<p style='color:var(--muted);font-size:14px;'>No decision yet. Analyze a produce batch to generate intelligence.</p>";
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function renderDecision(data) {
+
+      document.getElementById("emptyDecision").style.display = "none";
+      document.getElementById("decisionSummary").style.display = "block";
+
+      const ai = data.ai_decision;
+      const engine = data.decision_engine;
+      const cf = data.counterfactual_analysis;
+
+      document.getElementById("finalRecommendation").textContent =
+        ai.final_recommendation || "Unknown";
+
+      document.getElementById("aiConfidence").textContent =
+        (ai.confidence ?? 0) + "%";
+
+      document.getElementById("decisionScore").textContent =
+        engine.score ?? "—";
+
+      document.getElementById("validationStatus").textContent =
+        ai.validation_status || "—";
+
+      document.getElementById("engineAgreement").textContent =
+        ai.engine_agreement || "—";
+
+      document.getElementById("bestFutureValue").textContent =
+        cf.best_future_value ?? "—";
+
+      document.getElementById("baselineValue").textContent =
+        cf.baseline_future_value ?? "—";
+
+      document.getElementById("valueSaved").textContent =
+        "+" + (cf.value_saved_vs_baseline ?? 0);
+    }
+
+    function renderFutures(data) {
+      const cf = data.counterfactual_analysis;
+
+      document.getElementById("futuresSection").style.display = "block";
+      document.getElementById("bestAction").textContent =
+        cf.best_action || "—";
+      document.getElementById("forecastValue").textContent =
+        cf.best_future_value ?? "—";
+      document.getElementById("baselineFutureValue").textContent =
+        cf.baseline_future_value ?? "—";
+      document.getElementById("valueSavedVsBaseline").textContent =
+        "+" + (cf.value_saved_vs_baseline ?? 0);
+    }
+
+    function renderAllFutures(data) {
+
+      const cf = data.counterfactual_analysis;
+
+      if (!cf || !cf.scenarios) return;
+
+      const section = document.getElementById("allFuturesSection");
+      const container = document.getElementById("allFuturesContainer");
+
+      section.style.display = "block";
+      container.innerHTML = "";
+
+      cf.scenarios.forEach((scenario) => {
+
+        const winner = scenario.action === cf.best_action;
+
+        const card = document.createElement("div");
+
+        card.className =
+          "future-card" + (winner ? " winner" : "");
+
+        const gain = Number(scenario.gain_vs_baseline);
+
+        card.innerHTML = `
+          <span class="fc-badge">BEST PATH</span>
+
+          <h5>${scenario.action}</h5>
+
+          <div class="fc-row">
+            <span>Future Value</span>
+            <b>${Number(scenario.future_value).toFixed(2)}</b>
+          </div>
+
+          <div class="fc-row">
+            <span>vs Baseline</span>
+            <b>
+              ${gain >= 0 ? "+" : ""}${gain.toFixed(2)}
+            </b>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function renderHistory(data) {
+
+      const matches = data.historical_matches;
+
+      if (!matches || !matches.length) return;
+
+      const section = document.getElementById("historySection");
+      const container = document.getElementById("historyContainer");
+
+      section.style.display = "block";
+      container.innerHTML = "";
+
+      matches.forEach((item) => {
+
+        const card = document.createElement("div");
+        card.className = "batch-card";
+
+        card.innerHTML = `
+          <div class="bc-top">
+
+            <div class="bc-crop">
+              <div class="bc-emoji">📦</div>
+
+              <div>
+                <b>${item.produce_type}</b>
+                <span>${item.batch_id}</span>
+              </div>
+            </div>
+
+            <span class="bc-status decided">
+              HISTORICAL
+            </span>
+
+          </div>
+
+          <div class="review-row">
+            <span>Freshness</span>
+            <b>${item.freshness}</b>
+          </div>
+
+          <div class="review-row">
+            <span>Demand</span>
+            <b>${item.demand}</b>
+          </div>
+
+          <div class="review-row">
+            <span>Logistics</span>
+            <b>${item.logistics}</b>
+          </div>
+
+          <div class="review-row">
+            <span>Decision</span>
+            <b>${item.decision}</b>
+          </div>
+
+          <div class="review-row">
+            <span>Outcome</span>
+            <b>${item.outcome}</b>
+          </div>
+
+          <div class="review-row">
+            <span>Waste</span>
+            <b>${item.waste_percent}%</b>
+          </div>
+
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    let lastBatchPayload = null;
+    let lastDecisionData = null;
+
+    function renderValidation(data) {
+
+      const ai = data.ai_decision;
+
+      if (!ai) return;
+
+      const section =
+        document.getElementById("validationSection");
+
+      section.style.display = "block";
+
+      document.getElementById("validationDecision").textContent =
+        ai.validation_status || "UNKNOWN";
+
+      document.getElementById("validationConfidence").textContent =
+        `${ai.confidence ?? 0}%`;
+
+      document.getElementById("validatedRecommendation").textContent =
+        ai.final_recommendation || "—";
+
+      document.getElementById("validatedAgreement").textContent =
+        ai.engine_agreement || "—";
+
+      document.getElementById("validationReasoning").textContent =
+        ai.reasoning || "No reasoning available.";
+    }
+
+    function renderVisionResult(data) {
+
+      const result =
+        document.getElementById("visionResult");
+
+      result.style.display = "block";
+
+      document.getElementById("visionProduce").textContent =
+        data.produce_type || "Unknown";
+
+      document.getElementById("visionFreshness").textContent =
+        `${data.freshness_score ?? "—"}/100`;
+
+      document.getElementById("visionGrade").textContent =
+        data.quality_grade || "—";
+
+      document.getElementById("visionSummary").textContent =
+        data.visual_summary || "";
+
+      const issues =
+        document.getElementById("visionIssues");
+
+      issues.innerHTML = "";
+
+      const visibleIssues =
+        Array.isArray(data.visible_issues)
+          ? data.visible_issues
+          : [];
+
+      if (visibleIssues.length === 0) {
+
+        issues.innerHTML = `
+          <span class="bc-status decided">
+            No major visible issues
+          </span>
+        `;
+
+      } else {
+
+        visibleIssues.forEach(issue => {
+
+          const tag = document.createElement("span");
+
+          tag.className = "bc-status risk";
+          tag.textContent = issue;
+
+          issues.appendChild(tag);
+        });
+      }
+
+      autofillFromVision(data);
+    }
+
+    function autofillFromVision(data) {
+
+      const cropInput =
+        document.getElementById("crop_type");
+
+      if (cropInput && data.produce_type) {
+        cropInput.value = data.produce_type;
+      }
+    }
+
+    let visionAnalysis = null;
+
+    async function scanProduce(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const loading = document.getElementById("visionLoading");
+      const result = document.getElementById("visionResult");
+      const dropzone = document.getElementById("visionDropzone");
+
+      result.style.display = "none";
+      loading.style.display = "block";
+
+      const imageURL = URL.createObjectURL(file);
+
+      const resultImage =
+        document.getElementById("visionResultImage");
+
+      if (resultImage) {
+        resultImage.src = imageURL;
+      }
+
+      dropzone.innerHTML = `
+        <img
+          src="${imageURL}"
+          alt="Uploaded produce"
+          style="
+            width:100%;
+            height:260px;
+            object-fit:cover;
+            border-radius:20px;
+          "
+        >
+      `;
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/vision/analyze",
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.detail || "Vision analysis failed"
+          );
+        }
+
+        const data = await response.json();
+
+        visionAnalysis = data;
+
+        renderVisionResult(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Produce scan failed: " + error.message
+        );
+
+      } finally {
+
+        loading.style.display = "none";
+      }
+    }
+
+    function renderPassportPreview(data, payload) {
+
+      lastBatchPayload = payload;
+
+      const ai = data.ai_decision || {};
+      const engine = data.decision_engine || {};
+      const cf = data.counterfactual_analysis || {};
+
+      document.getElementById("passportSection").style.display = "block";
+
+      document.getElementById("passportBatchId").textContent =
+        data.batch_id || "—";
+
+      document.getElementById("passportProduce").textContent =
+        data.produce_type || "—";
+
+      document.getElementById("passportQuantity").textContent =
+        data.quantity_kg != null ? `${data.quantity_kg} kg` : "—";
+
+      document.getElementById("passportScore").textContent =
+        engine.score ?? "—";
+
+      document.getElementById("passportDecision").textContent =
+        ai.final_recommendation || "—";
+
+      document.getElementById("passportConfidence").textContent =
+        `${ai.confidence ?? 0}%`;
+
+      document.getElementById("passportValidation").textContent =
+        ai.validation_status || "—";
+
+      document.getElementById("passportFutureValue").textContent =
+        cf.best_future_value ?? "—";
+
+      const saved = Number(cf.value_saved_vs_baseline);
+
+      document.getElementById("passportValueSaved").textContent =
+        Number.isFinite(saved)
+          ? `${saved >= 0 ? "+" : ""}${saved.toFixed(2)}`
+          : "—";
+    }
+
+    function generatePassport() {
+
+      if (!lastDecisionData) {
+        alert("Analyze a batch first.");
+        return;
+      }
+
+      renderPassportPreview(
+        lastDecisionData,
+        lastBatchPayload
+      );
+
+      document.getElementById("passportSection").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      alert("Digital Produce Passport generated successfully.");
+    }
+
+    const liveIntelMessages = [
+      "8 possible futures currently modeled per batch.",
+      "Counterfactual engine compares action vs baseline in real time.",
+      "Historical RAG retrieves similar produce outcomes before final routing.",
+      "Validator audits every Chief Agent recommendation.",
+      "Digital Produce Passport preserves the full decision trail."
+    ];
+
+    let intelIndex = 0;
+
+    setInterval(() => {
+      intelIndex = (intelIndex + 1) % liveIntelMessages.length;
+
+      const el = document.getElementById("liveIntelMessage");
+
+      if (el) {
+        el.style.opacity = 0;
+
+        setTimeout(() => {
+          el.textContent = liveIntelMessages[intelIndex];
+          el.style.opacity = 1;
+        }, 250);
+      }
+    }, 2800);
+  </script>
+
+</body>
+</html>
